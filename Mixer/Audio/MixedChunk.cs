@@ -10,7 +10,7 @@
         private readonly byte[] _mixture;
         private readonly byte[] _extract;
 
-        private readonly HashSet<IAudioProvider> _providers;
+        private HashSet<IAudioProvider> _providers;
 
         #endregion Fields
 
@@ -28,8 +28,6 @@
 
             _mixture = new byte[format.GetSamples()];
             _extract = new byte[format.GetSamples()];
-
-            _providers = new HashSet<IAudioProvider>();
         }
 
         #endregion Constructors
@@ -38,6 +36,8 @@
 
         public MixedChunk Build(params IAudioProvider[] providers)
         {
+            _providers = new HashSet<IAudioProvider>(providers.Length);
+
             for (int i = 0; i < providers.Length; i++)
             {
                 if (_providers.Contains(providers[i]))
