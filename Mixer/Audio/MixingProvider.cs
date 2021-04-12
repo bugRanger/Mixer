@@ -19,7 +19,7 @@
 
         #region Events
 
-        public event Action<MixedChunk> Completed;
+        public event Action<IAudioProvider, byte[]> Completed;
 
         #endregion Events
 
@@ -51,7 +51,14 @@
             {
                 Thread.Sleep(_format.Duration);
 
-                Completed?.Invoke(new MixedChunk(_format).Build(_providers));
+                var mixedChunk = 
+                    new MixedChunk(_format)
+                    .Build(_providers);
+
+                for (int i = 0; i < _providers.Length; i++)
+                {
+                    Completed?.Invoke(_providers[i], mixedChunk.Exclude(_providers[i]));
+                }
             }
         }
 
