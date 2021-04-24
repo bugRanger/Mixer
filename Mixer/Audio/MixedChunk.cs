@@ -7,10 +7,8 @@
     {
         #region Fields
 
+        private readonly Dictionary<IAudioProvider, ArraySegment<byte>> _providerSamples;
         private readonly byte[] _mixture;
-        private readonly byte[] _extract;
-
-        private HashSet<IAudioProvider> _providers;
 
         #endregion Fields
 
@@ -27,77 +25,84 @@
             Format = format;
 
             _mixture = new byte[format.GetSamples()];
-            _extract = new byte[format.GetSamples()];
+            _providerSamples = new Dictionary<IAudioProvider, ArraySegment<byte>>();
         }
 
         #endregion Constructors
 
         #region Methods
 
-        public MixedChunk Build(params IAudioProvider[] providers)
+        public void Pack(IEnumerable<IAudioProvider> providers)
         {
-            _providers = new HashSet<IAudioProvider>(providers.Length);
-
-            for (int i = 0; i < providers.Length; i++)
+            foreach (var provider in providers)
             {
-                if (_providers.Contains(providers[i]))
+                if (_providerSamples.ContainsKey(provider))
                 {
-                    continue;
+                    return;
                 }
 
-                int count = providers[i].Peak(out byte[] chunk);
-                if (count > 0)
+                var samples = new byte[_mixture.Length];
+
+                int count = provider.Read(samples, 0, samples.Length);
+                if (count != 0)
                 {
-                    Sum32BitAudio(_mixture, 0, chunk, count);
-                    _providers.Add(providers[i]);
+                    Sum32Bit(samples, _mixture);
+
+                    _providerSamples[provider] = samples;
                 }
-            }
-
-            return this;
-        }
-
-        public byte[] Exclude(IAudioProvider provider) 
-        {
-            if (!_providers.Contains(provider))
-                return _mixture;
-
-            int count = provider.Pull(out byte[] chunk);
-            if (count == 0)
-                return _mixture;
-
-            Array.Copy(_mixture, _extract, _mixture.Length);
-
-            Sub32BitAudio(_extract, 0, chunk, count);
-
-            return _extract;
-        }
-
-        static unsafe void Sum32BitAudio(byte[] destBuffer, int offset, byte[] sourceBuffer, int bytesRead)
-        {
-            fixed (byte* pDestBuffer = &destBuffer[offset],
-                      pSourceBuffer = &sourceBuffer[0])
-            {
-                float* pfDestBuffer = (float*)pDestBuffer;
-                float* pfReadBuffer = (float*)pSourceBuffer;
-                int samplesRead = bytesRead / 4;
-                for (int n = 0; n < samplesRead; n++)
+                else
                 {
-                    pfDestBuffer[n] += pfReadBuffer[n];
+                    _providerSamples[provider] = _mixture;
                 }
             }
         }
 
-        static unsafe void Sub32BitAudio(byte[] destBuffer, int offset, byte[] sourceBuffer, int bytesRead)
+        public void Unpack()
         {
-            fixed (byte* pDestBuffer = &destBuffer[offset],
-                      pSourceBuffer = &sourceBuffer[0])
+            foreach (var pair in _providerSamples)
             {
-                float* pfDestBuffer = (float*)pDestBuffer;
-                float* pfReadBuffer = (float*)pSourceBuffer;
-                int samplesRead = bytesRead / 4;
-                for (int n = 0; n < samplesRead; n++)
+                IAudioProvider provider = pair.Key;
+                ArraySegment<byte> samples = pair.Value;
+
+                if (!ReferenceEquals(_mixture, samples))
                 {
-                    pfDestBuffer[n] -= pfReadBuffer[n];
+                    Sub32Bit(_mixture, samples);
+                }
+
+                provider.Write(samples);
+            }
+        }
+
+        [Obsolete("Remove: use safe methods.")]
+        internal static unsafe void Sum32Bit(ArraySegment<byte> source, byte[] dest)
+        {
+            fixed (byte* pSource = &source.Array[0], pDest = &dest[0])
+            {
+                int count = (source.Count - source.Offset) / 4;
+
+                float* pfSource = (float*)pSource;
+                float* pfDest = (float*)pDest;
+
+                for (int n = 0; n < count; n++)
+                {
+                    pfDest[n] += pfSource[n];
+                }
+            }
+        }
+
+        [Obsolete("Remove: use safe methods.")]
+        internal static unsafe void Sub32Bit(byte[] source, ArraySegment<byte> dest)
+        {
+            fixed (byte* pSource = &source[0], pDest = &dest.Array[0])
+            {
+                int count = (dest.Count - dest.Offset) / 4;
+
+                float* pfSource = (float*)pSource;
+                float* pfDest = (float*)pDest;
+
+                for (int n = 0; n < count; n++)
+                {
+                    pfDest[n] = pfSource[n] - pfDest[n];
                 }
             }
         }

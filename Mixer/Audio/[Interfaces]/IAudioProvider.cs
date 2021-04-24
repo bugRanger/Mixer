@@ -1,14 +1,16 @@
-﻿namespace Mixer.Audio
+﻿using System;
+
+namespace Mixer.Audio
 {
-    public interface IAudioProvider
+    using System;
+
+    using NAudio.Wave;
+
+    public interface IAudioProvider : IWaveProvider
     {
         #region Methods
 
-        void Push(byte[] chunk);
-
-        int Pull(out byte[] chunk);
-
-        int Peak(out byte[] chunk);
+        void Write(ArraySegment<byte> samples);
 
         #endregion Methods
     }

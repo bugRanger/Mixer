@@ -2,3 +2,5 @@
 packages/
 Mixer/bin/
 Mixer/obj/
+/Mixer.Tests/obj
+/Mixer.Tests/bin/Debug/netcoreapp3.1

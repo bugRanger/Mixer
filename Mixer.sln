@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mixer", "Mixer\Mixer.csproj", "{9E59DFD3-F3F3-4FD0-A926-011A094D16EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mixer", "Mixer\Mixer.csproj", "{9E59DFD3-F3F3-4FD0-A926-011A094D16EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mixer.Tests", "Mixer.Tests\Mixer.Tests.csproj", "{957F43A1-90FF-4F3A-99B8-ADDAA6FC8AFC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9E59DFD3-F3F3-4FD0-A926-011A094D16EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E59DFD3-F3F3-4FD0-A926-011A094D16EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E59DFD3-F3F3-4FD0-A926-011A094D16EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{957F43A1-90FF-4F3A-99B8-ADDAA6FC8AFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{957F43A1-90FF-4F3A-99B8-ADDAA6FC8AFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{957F43A1-90FF-4F3A-99B8-ADDAA6FC8AFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{957F43A1-90FF-4F3A-99B8-ADDAA6FC8AFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
