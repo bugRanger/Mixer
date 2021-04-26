@@ -1,18 +1,14 @@
-﻿using System;
-
-namespace Mixer.Audio
+﻿namespace Mixer.Audio
 {
     using System;
 
     using NAudio.Wave;
 
-    // TODO: Move to float array.
-    public interface IAudioProvider : IWaveProvider
+    public interface IAudioProvider : ISampleProvider
     {
         #region Methods
 
-        // TODO: Move to float array.
-        void Write(ArraySegment<byte> samples);
+        void Write(ArraySegment<float> samples);
 
         #endregion Methods
     }

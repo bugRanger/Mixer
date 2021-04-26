@@ -48,7 +48,7 @@
 
         public int GetSamples()
         {
-            return SampleRate / 1000 * Duration * (BitDepth / 8) * Channels;
+            return (SampleRate / 1000 * Duration * (BitDepth / 8) * Channels) / 4;
         }
 
         #endregion Methods

@@ -13,8 +13,8 @@
 
         #region Fields
 
-        private readonly Dictionary<IAudioProvider, ArraySegment<byte>> _providerSamples;
-        private readonly byte[] _mixture;
+        private readonly Dictionary<IAudioProvider, float[]> _providerSamples;
+        private readonly float[] _mixture;
 
         #endregion Fields
 
@@ -30,8 +30,8 @@
         {
             Format = format;
 
-            _mixture = new byte[format.GetSamples()];
-            _providerSamples = new Dictionary<IAudioProvider, ArraySegment<byte>>();
+            _mixture = new float[format.GetSamples()];
+            _providerSamples = new Dictionary<IAudioProvider, float[]>();
         }
 
         #endregion Constructors
@@ -47,7 +47,7 @@
                     return;
                 }
 
-                var samples = new byte[_mixture.Length];
+                var samples = new float[_mixture.Length];
 
                 int count = provider.Read(samples, 0, samples.Length);
                 if (count != 0)
@@ -68,7 +68,7 @@
             foreach (var pair in _providerSamples)
             {
                 IAudioProvider provider = pair.Key;
-                ArraySegment<byte> samples = pair.Value;
+                float[] samples = pair.Value;
 
                 if (!ReferenceEquals(_mixture, samples))
                 {
@@ -78,39 +78,19 @@
                 provider.Write(samples);
             }
         }
-
-        // TODO: Move to float array.
-        [Obsolete("Remove: use safe methods.")]
-        public static unsafe void Sum32Bit(ArraySegment<byte> source, byte[] dest, float volume = DEFAULT_VOLUME)
+        public static void Sum32Bit(float[] source, float[] dest, float volume = DEFAULT_VOLUME)
         {
-            fixed (byte* pSource = &source.Array[0], pDest = &dest[0])
+            for (int i = 0; i < dest.Length; i++)
             {
-                int count = (source.Count - source.Offset) / 4;
-
-                float* pfSource = (float*)pSource;
-                float* pfDest = (float*)pDest;
-
-                for (int n = 0; n < count; n++)
-                {
-                    pfDest[n] += volume * pfSource[n];
-                }
+                dest[i] += volume * source[i];
             }
         }
 
-        [Obsolete("Remove: use safe methods.")]
-        public static unsafe void Sub32Bit(byte[] source, ArraySegment<byte> dest, float volume = DEFAULT_VOLUME)
+        public static void Sub32Bit(float[] source, float[] dest, float volume = DEFAULT_VOLUME)
         {
-            fixed (byte* pSource = &source[0], pDest = &dest.Array[0])
+            for (int i = 0; i < dest.Length; i++)
             {
-                int count = (dest.Count - dest.Offset) / 4;
-
-                float* pfSource = (float*)pSource;
-                float* pfDest = (float*)pDest;
-
-                for (int n = 0; n < count; n++)
-                {
-                    pfDest[n] = pfSource[n] - (pfDest[n] * volume);
-                }
+                dest[i] = source[i] - (dest[i] * volume);
             }
         }
 
