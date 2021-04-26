@@ -5,6 +5,12 @@
 
     public class MixedChunk
     {
+        #region Constants
+
+        public const float DEFAULT_VOLUME = 0.75f;
+
+        #endregion Constants
+
         #region Fields
 
         private readonly Dictionary<IAudioProvider, ArraySegment<byte>> _providerSamples;
@@ -46,7 +52,7 @@
                 int count = provider.Read(samples, 0, samples.Length);
                 if (count != 0)
                 {
-                    Sum32Bit(samples, _mixture);
+                    Sum32Bit(samples, _mixture, DEFAULT_VOLUME);
 
                     _providerSamples[provider] = samples;
                 }
@@ -66,15 +72,16 @@
 
                 if (!ReferenceEquals(_mixture, samples))
                 {
-                    Sub32Bit(_mixture, samples);
+                    Sub32Bit(_mixture, samples, DEFAULT_VOLUME);
                 }
 
                 provider.Write(samples);
             }
         }
 
+        // TODO: Move to float array.
         [Obsolete("Remove: use safe methods.")]
-        internal static unsafe void Sum32Bit(ArraySegment<byte> source, byte[] dest)
+        public static unsafe void Sum32Bit(ArraySegment<byte> source, byte[] dest, float volume = DEFAULT_VOLUME)
         {
             fixed (byte* pSource = &source.Array[0], pDest = &dest[0])
             {
@@ -85,13 +92,13 @@
 
                 for (int n = 0; n < count; n++)
                 {
-                    pfDest[n] += pfSource[n];
+                    pfDest[n] += volume * pfSource[n];
                 }
             }
         }
 
         [Obsolete("Remove: use safe methods.")]
-        internal static unsafe void Sub32Bit(byte[] source, ArraySegment<byte> dest)
+        public static unsafe void Sub32Bit(byte[] source, ArraySegment<byte> dest, float volume = DEFAULT_VOLUME)
         {
             fixed (byte* pSource = &source[0], pDest = &dest.Array[0])
             {
@@ -102,7 +109,7 @@
 
                 for (int n = 0; n < count; n++)
                 {
-                    pfDest[n] = pfSource[n] - pfDest[n];
+                    pfDest[n] = pfSource[n] - (pfDest[n] * volume);
                 }
             }
         }

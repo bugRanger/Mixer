@@ -15,8 +15,9 @@
         private readonly int _interval;
 
         private CancellationTokenSource _cancellation;
-        private Worker<MixedChunk> _worker;
+        private Worker<MixedChunk> _queue;
         private EventWaitHandle _waiter;
+        private EventWaitHandle _worker;
         private Thread _thread;
 
         private bool _disposed;
@@ -39,8 +40,9 @@
             _providers = new HashSet<IAudioProvider>();
 
             _cancellation = new CancellationTokenSource();
-            _worker = new Worker<MixedChunk>(chunk => chunk.Unpack());
+            _queue = new Worker<MixedChunk>(chunk => chunk.Unpack());
             _waiter = new EventWaitHandle(false, EventResetMode.AutoReset);
+            _worker = new EventWaitHandle(false, EventResetMode.AutoReset);
             _thread = new Thread(Handle);
             _thread.Priority = ThreadPriority.Highest;
             _thread.Start();
@@ -69,7 +71,8 @@
         public void WaitSync() 
         {
             _waiter.Set();
-            _worker.WaitSync();
+            _worker.WaitOne();
+            _queue.WaitSync();
         }
 
         public void Dispose()
@@ -89,8 +92,10 @@
                     var chunk = new MixedChunk(_format);
                     chunk.Pack(_providers);
 
-                    _worker.Enqueue(chunk);
+                    _queue.Enqueue(chunk);
                 }
+
+                _worker.Set();
             }
         }
 
@@ -113,6 +118,9 @@
 
                 _worker.Dispose();
                 _worker = null;
+
+                _queue.Dispose();
+                _queue = null;
 
                 _cancellation.Dispose();
                 _cancellation = null;
