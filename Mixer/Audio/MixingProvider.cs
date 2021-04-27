@@ -44,7 +44,6 @@
             _waiter = new EventWaitHandle(false, EventResetMode.AutoReset);
             _worker = new EventWaitHandle(false, EventResetMode.AutoReset);
             _thread = new Thread(Handle);
-            _thread.Priority = ThreadPriority.Highest;
             _thread.Start();
         }
 

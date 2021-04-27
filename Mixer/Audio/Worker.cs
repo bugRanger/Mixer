@@ -29,7 +29,6 @@
             _cancellation = new CancellationTokenSource();
             _waiter = new EventWaitHandle(false, EventResetMode.AutoReset);
             _thread = new Thread(HandleAction);
-            _thread.Priority = ThreadPriority.Highest;
             _thread.Start();
         }
 
