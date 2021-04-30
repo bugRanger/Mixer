@@ -13,6 +13,7 @@
 
         private CancellationTokenSource _cancellation;
         private EventWaitHandle _waiter;
+        private EventWaitHandle _worker;
         private Thread _thread;
 
         private bool _disposed;
@@ -28,6 +29,7 @@
 
             _cancellation = new CancellationTokenSource();
             _waiter = new EventWaitHandle(false, EventResetMode.AutoReset);
+            _worker = new EventWaitHandle(false, EventResetMode.AutoReset);
             _thread = new Thread(HandleAction);
             _thread.Start();
         }
@@ -39,6 +41,7 @@
         public void Enqueue(T item)
         {
             _queue.Enqueue(item);
+            _worker.Set();
         }
 
         public void WaitSync() 
@@ -66,6 +69,9 @@
                 _thread.Join();
                 _thread = null;
 
+                _worker.Dispose();
+                _worker = null;
+
                 _waiter.Dispose();
                 _waiter = null;
 
@@ -80,18 +86,14 @@
         {
             try
             {
-                while (!_cancellation.IsCancellationRequested)
+                while (WaitHandle.WaitAny(new[] { _cancellation.Token.WaitHandle, _worker }) > 0)
                 {
-                    var handle = false;
-
                     while (_queue.TryDequeue(out var item))
                     {
-                        handle = true;
                         _action.Invoke(item);
                     }
 
-                    if (handle)
-                        _waiter.Set();
+                    _waiter.Set();
                 }
             }
             catch (OperationCanceledException)
